@@ -1,11 +1,21 @@
 [package]
 name = "kcheck"
 version = "0.1.0"
+rust-version = "1.80.0"
 edition = "2021"
 
-[dependencies]
-kaspa-wrpc-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", branch = "master" }
-kaspa-rpc-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", branch = "master" }
+[profile.dev]
+panic = "abort"
 
-clap = { version = "4.4.16", features = ["derive"] }
-tokio = { version = "1", features = ["rt-multi-thread"] }
+[profile.release]
+lto = "thin"
+strip = true
+overflow-checks = true
+panic = "abort"
+
+[dependencies]
+kaspa-wrpc-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", tag = "v0.15.1" }
+kaspa-rpc-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", tag = "v0.15.1" }
+
+clap = { version = "4.5.16", features = ["derive"] }
+tokio = { version = "1.40.0", features = ["rt-multi-thread"] }

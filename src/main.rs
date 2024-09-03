@@ -1,8 +1,9 @@
-use std::time::Duration;
 use clap::Parser;
-use kaspa_wrpc_client::{KaspaRpcClient, WrpcEncoding, result::Result, client::{ConnectOptions,ConnectStrategy}};
 use kaspa_rpc_core::{api::rpc::RpcApi, GetServerInfoResponse};
+use kaspa_wrpc_client::client::ConnectStrategy;
+use kaspa_wrpc_client::{client::ConnectOptions, result::Result, KaspaRpcClient, WrpcEncoding};
 use std::process::ExitCode;
+use std::time::Duration;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -14,7 +15,7 @@ struct Cli {
     encoding: Option<WrpcEncoding>,
     /// Optional verbose output
     #[arg(long, action = clap::ArgAction::SetTrue)]
-    verbose : Option<bool>,
+    verbose: Option<bool>,
     /// Optional timeout in milliseconds
     #[arg(long)]
     timeout: Option<u64>,
@@ -32,19 +33,13 @@ async fn main() -> ExitCode {
 }
 
 async fn check() -> Result<()> {
-
-    let Cli {
-        url,
-        encoding,
-        verbose,
-        timeout
-    } = Cli::parse();
+    let Cli { url, encoding, verbose, timeout } = Cli::parse();
 
     let encoding = encoding.unwrap_or(WrpcEncoding::Borsh);
     let verbose = verbose.unwrap_or(false);
     let timeout = timeout.unwrap_or(5_000);
 
-    let client = KaspaRpcClient::new(encoding, url.as_str())?;
+    let client = KaspaRpcClient::new(encoding, Some(url.as_str()), None, None, None)?;
 
     let options = ConnectOptions {
         block_async_connect: true,
@@ -53,15 +48,9 @@ async fn check() -> Result<()> {
         ..Default::default()
     };
 
-    client.connect(options).await?;
+    client.connect(Some(options)).await?;
 
-    let GetServerInfoResponse {
-        is_synced,
-        server_version,
-        network_id,
-        virtual_daa_score,
-        ..
-    } = client.get_server_info().await?;
+    let GetServerInfoResponse { is_synced, server_version, network_id, virtual_daa_score, .. } = client.get_server_info().await?;
 
     client.disconnect().await?;
 
@@ -69,11 +58,10 @@ async fn check() -> Result<()> {
         let status = if is_synced { "synced" } else { "not-synced" };
         println!("kaspa/{server_version}/{network_id}/{virtual_daa_score}/{status}");
     }
-    
+
     if is_synced {
         Ok(())
     } else {
         Err("node is not synced".into())
     }
-
 }
