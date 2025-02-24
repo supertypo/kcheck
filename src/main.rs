@@ -6,7 +6,7 @@ use std::process::ExitCode;
 use std::time::Duration;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, about, long_about = None, version = env!("VERGEN_GIT_DESCRIBE"))]
 struct Cli {
     /// wRPC url
     url: String,
